@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+        id="com.ultracreation"
+        version="0.7.0">
+
+  <name>Usb</name>
+
+  <engines>
+    <engine name="cordova" version=">=3.4.0"/>
+  </engines>
+
+  <asset src="www/usb.js" target="js/usb.js"/>
+
+  <js-module src="www/usb.js" name="usb">
+    <clobbers target="usb" />
+  </js-module>
+
+  <platform name="android">
+
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="Usb">
+        <param name="android-package" value="com.ultracreation.UsbPlugin"/>
+      </feature>
+    </config-file>
+
+    <source-file src="src/android/UsbPlugin.java" target-dir="src/com/ultracreation/"/>
+    <source-file src="src/android/UsbRequestReceiver.java" target-dir="src/com/ultracreation/"/>
+  </platform>
+</plugin>
