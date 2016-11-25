@@ -10,6 +10,8 @@ import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -50,6 +52,8 @@ public class UsbPlugin extends CordovaPlugin {
     protected final Object mWriteBufferLock = new Object();
     private boolean register;
     private CallbackContext readCallback;
+    private UsbReadTask mUsbReadTask;
+
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         System.out.println("action = " + action);
@@ -73,7 +77,7 @@ public class UsbPlugin extends CordovaPlugin {
             String data = arg_object.getString("data");
             writeSerial(data, callbackContext);
             return true;
-        }else if (ACTION_WRITE_HEX.equals(action)) {
+        } else if (ACTION_WRITE_HEX.equals(action)) {
             String data = arg_object.getString("data");
             writeSerialHex(data, callbackContext);
             return true;
@@ -130,7 +134,9 @@ public class UsbPlugin extends CordovaPlugin {
         Log.d(TAG, "Registering callback");
         cordova.getThreadPool().execute(new Runnable() {
             public void run() {
-                readCallback = callbackContext;
+//                readCallback = callbackContext;
+                if (mUsbReadTask != null)
+                    mUsbReadTask.setCallbackContext(callbackContext);
             }
         });
     }
@@ -140,8 +146,7 @@ public class UsbPlugin extends CordovaPlugin {
             public void run() {
                 if (usbEpOut == null) {
                     callbackContext.error("Writing a closed port.");
-                }
-                else {
+                } else {
 //                    if(!isRegisterRead) {
 //                        callbackContext.error("RegisterCallBack is not ready.");
 //                        return;
@@ -151,10 +156,9 @@ public class UsbPlugin extends CordovaPlugin {
                         byte[] buffer = data.getBytes();
                         write(buffer, 1000);
                         callbackContext.success();
-                        readData();
+//                        readData();
 
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         // deal with error
                         Log.d(TAG, e.getMessage());
                         callbackContext.error(e.getMessage());
@@ -170,16 +174,14 @@ public class UsbPlugin extends CordovaPlugin {
             public void run() {
                 if (usbEpOut == null) {
                     callbackContext.error("Writing a closed port.");
-                }
-                else {
+                } else {
                     try {
                         Log.d(TAG, data);
                         byte[] buffer = hexStringToByteArray(data);
                         int result = write(buffer, 1000);
                         callbackContext.success(result + " bytes written.");
-                        readData();
-                    }
-                    catch (IOException e) {
+//                        readData();
+                    } catch (IOException e) {
                         // deal with error
                         Log.d(TAG, e.getMessage());
                         callbackContext.error(e.getMessage());
@@ -256,18 +258,18 @@ public class UsbPlugin extends CordovaPlugin {
             if (connection != null && connection.claimInterface(intf, true)) {
                 Log.d(TAG, "open SUCCESS");
                 mConnection = connection;
-//                if(mUsbReadTask != null) {
-//                    if(!mUsbReadTask.isTheSame(connection,usbEpIn)){
-//                        System.out.println("isTheSame");
-//                        mUsbReadTask.stop();
-//                        mUsbReadTask = new UsbReadTask(connection, usbEpIn);
-//                    }
-//                }else {
-//                    mUsbReadTask = new UsbReadTask(connection, usbEpIn);
-//                }
-//                Thread thread = new Thread(mUsbReadTask);
-//                thread.setDaemon(true);
-//                thread.start();
+                if (mUsbReadTask != null) {
+                    if (!mUsbReadTask.isTheSame(connection, usbEpIn)) {
+                        System.out.println("isTheSame");
+                        mUsbReadTask.stopTask();
+                        mUsbReadTask.interrupt();
+                        mUsbReadTask = new UsbReadTask(connection, usbEpIn, cordova.getActivity());
+                        mUsbReadTask.start();
+                    }
+                } else {
+                    mUsbReadTask = new UsbReadTask(connection, usbEpIn, cordova.getActivity());
+                    mUsbReadTask.start();
+                }
                 callbackContext.success("open success");
             } else {
                 Log.d(TAG, "open FAIL");
@@ -306,17 +308,17 @@ public class UsbPlugin extends CordovaPlugin {
         return offset;
     }
 
-    private void readData(){
+    private void readData() {
         byte[] temp = new byte[64];
         int ret = mConnection.bulkTransfer(usbEpIn, temp, temp.length, 3000);
-        while(ret>0){
+        while (ret > 0) {
             byte[] result = new byte[ret];
-            System.arraycopy(temp,0,result,0,ret);
+            System.arraycopy(temp, 0, result, 0, ret);
             System.out.println("ret = " + ret);
             System.out.println("result = " + new String(result));
             ret = mConnection.bulkTransfer(usbEpIn, temp, temp.length, 3000);
-            if(readCallback != null) {
-                PluginResult pluginResult = new PluginResult(PluginResult.Status.OK,result);
+            if (readCallback != null) {
+                PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, result);
                 pluginResult.setKeepCallback(true);
                 readCallback.sendPluginResult(pluginResult);
             }
@@ -329,7 +331,7 @@ public class UsbPlugin extends CordovaPlugin {
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
             data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                    + Character.digit(s.charAt(i+1), 16));
+                    + Character.digit(s.charAt(i + 1), 16));
         }
         return data;
     }
@@ -341,9 +343,36 @@ public class UsbPlugin extends CordovaPlugin {
 
     @Override
     public void onDestroy() {
+        ViewGroup container = (ViewGroup) cordova.getActivity().findViewById(android.R.id.content);
+        container.removeAllViews();
+        if (webView != null) {
+            webView.clearHistory();
+            webView.clearCache(true);
+            webView.loadUrl("about:blank");
+            webView = null;
+        }
         super.onDestroy();
+        release();
+    }
+
+    private void release() {
         if (register && mUsbReceiver != null)
             cordova.getActivity().unregisterReceiver(mUsbReceiver);
+        if (mConnection != null)
+            mConnection.releaseInterface(usbDevice.getInterface(1));
+        if (mUsbReadTask != null) {
+            mUsbReadTask.stopTask();
+            mUsbReadTask.interrupt();
+        }
+        manager = null;
+        usbDevice = null;
+        mConnection = null;
+        usbEpIn = null;
+        usbEpOut = null;
+        mUsbReceiver = null;
+        readCallback = null;
+        mUsbReadTask = null;
+
 
     }
 }
