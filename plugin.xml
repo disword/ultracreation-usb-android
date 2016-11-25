@@ -25,5 +25,6 @@
 
     <source-file src="src/android/UsbPlugin.java" target-dir="src/com/ultracreation/"/>
     <source-file src="src/android/UsbRequestReceiver.java" target-dir="src/com/ultracreation/"/>
+    <source-file src="src/android/UsbReadTask.java" target-dir="src/com/ultracreation/"/>
   </platform>
 </plugin>
