@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaArgs;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
@@ -55,7 +56,7 @@ public class UsbPlugin extends CordovaPlugin {
     private UsbReadTask mUsbReadTask;
 
     @Override
-    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+    public boolean execute(String action, CordovaArgs args, CallbackContext callbackContext) throws JSONException {
         System.out.println("action = " + action);
         JSONObject arg_object = args.optJSONObject(0);
         if (ACTION_REQUEST_PERMISSION.equals(action)) {
@@ -74,8 +75,8 @@ public class UsbPlugin extends CordovaPlugin {
             registerReadCallback(callbackContext);
             return true;
         } else if (ACTION_WRITE.equals(action)) {
-            String data = arg_object.getString("data");
-            writeSerial(data, callbackContext);
+            byte[] arrayBuffer = args.getArrayBuffer(0);
+            writeSerial(arrayBuffer, callbackContext);
             return true;
         } else if (ACTION_WRITE_HEX.equals(action)) {
             String data = arg_object.getString("data");
@@ -141,7 +142,7 @@ public class UsbPlugin extends CordovaPlugin {
         });
     }
 
-    private void writeSerial(final String data, final CallbackContext callbackContext) {
+    private void writeSerial(final byte[] data, final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(new Runnable() {
             public void run() {
                 if (usbEpOut == null) {
@@ -152,9 +153,9 @@ public class UsbPlugin extends CordovaPlugin {
 //                        return;
 //                    }
                     try {
-                        Log.d(TAG, data);
-                        byte[] buffer = data.getBytes();
-                        write(buffer, 1000);
+                        //Log.d(TAG, data);
+                        //byte[] buffer = data.getBytes();
+                        write(data, 1000);
                         callbackContext.success();
 //                        readData();
 
