@@ -44,16 +44,7 @@ module.exports = {
             errorCallback,
             'Usb',
             'writeSerial',
-            [{'data': data}]
-        );
-    },
-    writeHex: function(hexString, successCallback, errorCallback) {
-        cordova.exec(
-            successCallback,
-            errorCallback,
-            'Usb',
-            'writeSerialHex',
-            [{'data': hexString}]
+            [data]
         );
     },
     registerReadCallback: function(successCallback, errorCallback) {
