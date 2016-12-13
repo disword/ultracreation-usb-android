@@ -345,13 +345,9 @@ public class UsbPlugin extends CordovaPlugin {
     @Override
     public void onDestroy() {
         ViewGroup container = (ViewGroup) cordova.getActivity().findViewById(android.R.id.content);
-        container.removeAllViews();
-        if (webView != null) {
-            webView.clearHistory();
-            webView.clearCache(true);
-            webView.loadUrl("about:blank");
-            webView = null;
-        }
+        if(container != null)
+            container.removeAllViews();
+        
         super.onDestroy();
         release();
     }
