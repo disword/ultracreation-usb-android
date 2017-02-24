@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
         id="ultracreation-usb-android"
-        version="0.7.1">
+        version="0.7.2">
 
   <name>Usb</name>
 
@@ -30,5 +30,6 @@
     <source-file src="src/android/UsbPlugin.java" target-dir="src/com/ultracreation/"/>
     <source-file src="src/android/UsbRequestReceiver.java" target-dir="src/com/ultracreation/"/>
     <source-file src="src/android/UsbReadTask.java" target-dir="src/com/ultracreation/"/>
+    <source-file src="src/android/usb_device_filter.xml" target-dir="res/xml/"/>
   </platform>
 </plugin>
