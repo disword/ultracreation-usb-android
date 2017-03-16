@@ -55,5 +55,14 @@ module.exports = {
                 'registerReadCallback',
                 []
             );
-        }
+     },
+    isSupportOTG: function(successCallback, errorCallback) {
+                cordova.exec(
+                    successCallback,
+                    errorCallback,
+                    'Usb',
+                    'isSupportOTG',
+                    []
+                );
+    }
 };
