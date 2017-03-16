@@ -37,6 +37,7 @@ public class UsbPlugin extends CordovaPlugin {
     private static final String ACTION_CLOSE = "closeSerial";
     private static final String ACTION_READ_CALLBACK = "registerReadCallback";
     private static final String ACTION_USB_STATE_CALLBACK = "registerUsbStateCallback";
+    private static final String ACTION_IS_SUPPORT_OTG = "isSupportOTG";
 
     private static final String TAG = "UsbPlugin";
 
@@ -82,9 +83,29 @@ public class UsbPlugin extends CordovaPlugin {
             String data = arg_object.getString("data");
             writeSerialHex(data, callbackContext);
             return true;
-        } else {
+        } else if (ACTION_IS_SUPPORT_OTG.equals(action)) {
+            checkIsSupportOTG(callbackContext);
+            return true;
+        }else {
             return false;
         }
+    }
+    
+    private void checkIsSupportOTG(final CallbackContext callbackContext){
+        cordova.getThreadPool().execute(new Runnable() {
+
+            @Override
+            public void run() {
+                initManager();
+                boolean isSupportOtg = manager != null &&
+                        cordova.getActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_HOST)
+                        && manager.getDeviceList() != null && manager.getDeviceList().size() >0;
+                if(isSupportOtg)
+                    callbackContext.success("OTG support");
+                else
+                    callbackContext.error("OTG not support");
+            }
+        });
     }
 
     private void requestPermission(final JSONObject opts, final CallbackContext callbackContext) {
