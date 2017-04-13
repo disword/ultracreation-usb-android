@@ -100,7 +100,7 @@ public class UsbPlugin extends CordovaPlugin {
                 initManager();
                 boolean isSupportOtg = manager != null &&
                         cordova.getActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_USB_HOST)
-                        && manager.getDeviceList() != null && manager.getDeviceList().size() >0;
+                        && manager.getDeviceList() != null;
                 int value = isSupportOtg ? 1 : 0;
                 callbackContext.success(value);
             }
