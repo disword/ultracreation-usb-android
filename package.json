@@ -1,0 +1,29 @@
+{
+  "name": "ultracreation-usb-android",
+  "version": "0.7.5",
+  "description": "This plugin provides usb communication for Android.",
+  "cordova": {
+    "id": "ultracreation-usb-android",
+    "platforms": [
+      "android"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/disword/ultracreation-usb-android.git"
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android"
+  ],
+  "engines": [
+    {
+      "name": "cordova",
+      "version": ">=3.4.0"
+    }
+  ],
+  "author": "",
+  "license": "BSD",
+  
+  "homepage": "https://github.com/disword/ultracreation-usb-android"
+}
